@@ -1,9 +1,10 @@
 ---
 title: "TP2 MPA"
-author: Alexandre Poupeau & Yoan Souty
+author: "Alexandre Poupeau & Yoan Souty"
 output:
-  pdf_document: default
+  html_document: default
   html_notebook: default
+  pdf_document: default
 ---
 
 ### Question 1
@@ -25,7 +26,8 @@ p \left( y | c, \theta_1, \theta_2 \right) & = & \prod \limits_{i=1}^{c-1} p(y_i
 \end{eqnarray*}
 
 ### Question 3
-On utilise la formule de Bayes :
+
+* On utilise la formule de Bayes :
 
 \begin{eqnarray*}
 p(y | c= 1, \theta_1 , \theta_2) &=& \frac{p(c=1 | y, \theta_1, \theta_2) p(y, \theta_1, \theta_2)}{p(c=1, \theta_1, \theta_2)} \\
@@ -43,3 +45,7 @@ D'où
 \begin{eqnarray*}
 \frac{p(c|y)}{p(c=1|y)} &=& \frac{\prod \limits_{i=1}^{c-1} \theta_1 ^{y_i} \left( 1 - \theta_1 \right) ^{1 - y_i} \prod \limits _{i=c}^{n} \theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i}}{\prod \limits _{i=1}^{n} \theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i}} = \prod \limits_{i=1}^{c-1} \frac{\theta_1 ^{y_i} \left( 1 - \theta_1 \right) ^{1 - y_i}}{\theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i}}
 \end{eqnarray*}
+
+
+
+* Pour $1 \leq c \leq n$, d'après la formule précédente, le rapport $\frac{p(c|y)}{p(c=1|y)}$ comporte environ $c-1$ multiplications. Ainsi, pour calculer l'ensemble des rapports $\frac{p(c|y)}{p(c=1|y)}, ~ \forall c$, on effectue l'ordre de $\sum \limits_{c=1}^{n} (c-1) = \sum \limits_{c=1}^{n-1} c = \frac{n(n-1)}{2}$ opérations.
