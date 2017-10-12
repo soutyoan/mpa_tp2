@@ -1,0 +1,45 @@
+---
+title: "TP2 MPA"
+author: Alexandre Poupeau & Yoan Souty
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+### Question 1
+Chaque $y_i$ est indépendant et $y_i$ ~ $\mathcal{B} (\theta_2), ~ \forall i$, donc :
+\begin{eqnarray*}
+p \left( y | c=1, \theta_1, \theta_2 \right) & = & \prod \limits_{i=1}^{n} p(y_i |c = 1, \theta_1, \theta_2) \\
+& =& \prod \limits _{i=1}^{n} \theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i} \\
+&=& \theta_2^{\sum \limits_{i=1}^{n} y_i} (1-\theta_2)^{n - \sum \limits_{i=1}^{n} y_i}
+\end{eqnarray*}
+
+
+
+### Question 2
+$\forall i \in [1, c-1], ~ y_i$ ~ $\mathcal{B} (\theta_1)$ et $\forall i \in [c, n], ~ y_i$ ~ $\mathcal{B} (\theta_2)$, donc pour $c=k, ~ k \geq 2$ :
+\begin{eqnarray*}
+p \left( y | c, \theta_1, \theta_2 \right) & = & \prod \limits_{i=1}^{c-1} p(y_i |c , \theta_1, \theta_2) \prod \limits _{i=c}^{n} p(y_i |c , \theta_1, \theta_2) \\
+& =& \prod \limits_{i=1}^{c-1} \theta_1 ^{y_i} \left( 1 - \theta_1 \right) ^{1 - y_i} \prod \limits _{i=c}^{n} \theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i} \\
+&=&  \theta_1^{\sum \limits_{i=1}^{c-1} y_i} (1-\theta_1)^{c-1 - \sum \limits_{i=1}^{c-1} y_i}  \theta_2^{\sum \limits_{i=c}^{n} y_i} (1-\theta_2)^{n-c+1 - \sum \limits_{i=c}^{n} y_i}
+\end{eqnarray*}
+
+### Question 3
+On utilise la formule de Bayes :
+
+\begin{eqnarray*}
+p(y | c= 1, \theta_1 , \theta_2) &=& \frac{p(c=1 | y, \theta_1, \theta_2) p(y, \theta_1, \theta_2)}{p(c=1, \theta_1, \theta_2)} \\
+&\text{et}& \\
+p(y | c, \theta_1 , \theta_2) &=& \frac{p(c | y, \theta_1, \theta_2) p(y, \theta_1, \theta_2)}{p(c,  \theta_1, \theta_2)}
+\end{eqnarray*}
+donc, en remarquant que $p(c=1 | y, \theta_1, \theta_2) = p(c=1 | y)$ et $p(c | y, \theta_1, \theta_2) = p(c | y)$ car $c$, $\theta_1$ et $\theta_2$ sont indépendants, on a:
+
+\begin{eqnarray*}
+\frac{p(y | c, \theta_1 , \theta_2)}{p(y | c=1, \theta_1 , \theta_2)} &=& \frac{p(c|y)p(y, \theta_1, \theta_2)}{p(c, \theta_1, \theta_2)} \times \frac{p(c=1, \theta_1, \theta_2)}{p(c=1|y)p(y, \theta_1, \theta_2)} \\
+&=& \frac{p(c|y)}{\frac{1}{n}} \times \frac{\frac{1}{n}}{p(c=1|y)} = \frac{p(c|y)}{p(c=1|y)}.
+\end{eqnarray*}
+
+D'où 
+\begin{eqnarray*}
+\frac{p(c|y)}{p(c=1|y)} &=& \frac{\prod \limits_{i=1}^{c-1} \theta_1 ^{y_i} \left( 1 - \theta_1 \right) ^{1 - y_i} \prod \limits _{i=c}^{n} \theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i}}{\prod \limits _{i=1}^{n} \theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i}} = \prod \limits_{i=1}^{c-1} \frac{\theta_1 ^{y_i} \left( 1 - \theta_1 \right) ^{1 - y_i}}{\theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i}}
+\end{eqnarray*}
