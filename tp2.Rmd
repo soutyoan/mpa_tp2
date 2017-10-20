@@ -49,3 +49,116 @@ D'où
 
 
 * Pour $1 \leq c \leq n$, d'après la formule précédente, le rapport $\frac{p(c|y)}{p(c=1|y)}$ comporte environ $c-1$ multiplications. Ainsi, pour calculer l'ensemble des rapports $\frac{p(c|y)}{p(c=1|y)}, ~ \forall c$, on effectue l'ordre de $\sum \limits_{c=1}^{n} (c-1) = \sum \limits_{c=1}^{n-1} c = \frac{n(n-1)}{2}$ opérations.
+
+### Question 4
+
+On suppose $\theta_1$ et $\theta_2$ connues.
+
+On note $\forall n \in \mathbb{N}$, $p_{c=n} = p(c=n|y)$ (on oublie pas le sachant $y$ implicite dans cette notation attention) et $f_{\theta_1, \theta_2}(y_i) = \dfrac{\theta_1 ^{y_i} \left( 1 - \theta_1 \right) ^{1 - y_i}}{\theta_2 ^{y_i} \left( 1 - \theta_2 \right) ^{1 - y_i}}$.
+
+On a alors :
+
+$$p_{c=2} = p_{c=1} \times f_{\theta_1, \theta_2}(y_1)$$
+
+$$p_{c=3} = p_{c=2} \times f_{\theta_1, \theta_2}(y_2)$$
+
+D'où :
+
+\begin{equation}
+p_{c=n+1} = p_{c=n} \times f_{\theta_1, \theta_2}(y_n)
+\end{equation}
+
+Il nous faut cependant $p_{c=1}$ pour démarrer et obtenir $p_{c=n} \forall n \in \mathbb{N}$.
+
+Or, on a :
+
+$$\dfrac{p_{c=1}}{p_{c=1}} = 1$$
+
+$$\dfrac{p_{c=2}}{p_{c=1}} = f_{\theta_1, \theta_2}(y_1)$$
+
+$$\dfrac{p_{c=3}}{p_{c=1}} = f_{\theta_1, \theta_2}(y_1) \times f_{\theta_1, \theta_2}(y_2)$$
+
+Ainsi de suite jusqu'à : $$\dfrac{p_{c=n}}{p_{c=1}} = \displaystyle \prod^{n-1}_{i=1} f_{\theta_1, \theta_2}(y_i)$$.
+
+De ce fait, on a :
+
+$$\dfrac{\displaystyle \sum_{i=1}^{n} p_{c=i} }{p_{c=1}} = 1 + \displaystyle\sum_{k=2}^{n}  \left( \displaystyle \prod_{i=1}^{k-1} f_{\theta_1, \theta_2}(y_i)  \right)$$
+Or on a $\displaystyle \sum_{i=1}^{n} p_{c=i} = 1$ par la propriété des probabilités totales. Donc finalement :
+
+
+\begin{equation}
+p_{c=1} = \dfrac{1}{1 + \displaystyle\sum_{k=2}^{n}  \left( \displaystyle \prod_{i=1}^{k-1} f_{\theta_1, \theta_2}(y_i)  \right)}
+\end{equation}
+
+
+```{r}
+
+f <- function(theta1, theta2, yi) {
+  result <- (theta1^yi * (1-theta1)^(1-yi)) / (theta2^y1 * (1-theta2)^(1-yi))
+  return(result)
+}
+
+pcsachanty <- function(theta1, theta2, y) {
+  # On extrait n de y
+  n <- length(y)
+  # On s'occupe d'obtenir les valeurs de f(theta1, theta2, yi) (deux valeurs différentes lorsque yi = 0 ou yi =1) pour optimiser les   calculs suivants
+  vectorf <- c(0,1)
+  vectorf[0] <- f(theta1, theta2, 0)
+  vectorf[1] <- f(theta1, theta2, 1)
+  # On calcul p(c=1|y)
+  pcsachy <- c(1,n)
+  temp <- 0
+
+  for (k in 2:n) {
+    mult <- 0
+    for (i in 1:(k-1)) {
+      mult <- mult*vectorf[y[i]]
+    }
+    temp <- temp + mult
+  }
+  # On calcul p(c=n|y) pour tout n dans [2, n]
+  pcsachy[1] <- 1/(1+temp)
+  
+  for (i in 2:n) {
+    pcsachy[i] <- pcsachy[i-1] * vectorf[y[i-1]]
+  }
+  # On retourne le vecteur contenant les probas p(c=n|y) pour tout n dans [1, n]
+  return(pcsachy)
+}
+
+```
+
+### Question 5
+
+On suppose désormais $\theta_1$ et $\theta_2$ inconnues.
+
+On va procéder à un échantillonnage de Gibbs pour estimer $c$ puis $\theta_1$ et $\theta_2$ et ainsi de suite jusqu'à convergence de ces trois valeurs. $y$ est ici fixé et une donnée que l'on souhaite étudier pour en faire ressortir ce qui nous intéresse, ici la valeur de $c$, $\theta_1$ et $\theta_2$.
+
+L'idée est alors la suivante : 
+
+a) On fixe $\theta_1$ et $\theta_2$ à une valeur initiale que l'on veut.
+b) On estime $c$ via $p(c|y, \theta_1, \theta_2)$.
+c) On estime $\theta_1$ via $p(\theta_1|y,c)$ avec la valeur mise à jour de $c$. De même pour $\theta_2$.
+d) On retourne à l'étape b) jusqu'à convergence.
+
+L'étape b) ne pose pas de souci on a juste à utiliser la l'algorithme de la question 4.
+
+L'étape c) nécessite la connaissance de la densité $p(\theta_1|y,c)$ et $p(\theta_2|y,c)$. Nous n'avons pas ces densités.
+Cependant, on peut trouver leur expression. En effet :
+
+$c$ ici nous indique jusqu'où on a de l'information sur $y$ concernant $\theta_1$.
+
+\begin{eqnarray*}
+p(\theta_1|c, y) & = & p(\theta_1|c, y_1, y_2, \ldots, y_n) \\
+& = & p(\theta_1|c, y_1, y_2, \ldots, y_{c-1}) \text{  $c$ nous indique jusqu'où on a de l'information concernant $\theta_1$ sur $y$}\\
+& \propto & p(y_1| \theta_1) \times p(\theta_1|c, y_2, \ldots, y_{c-1}) \\
+& \propto & p(y_1| \theta_1) \times p(y_2| \theta_1) \times p(\theta_1|c, y_3, \ldots, y_{c-1}) \\
+& \propto & \displaystyle \prod_{i=1}^{c-1} p(y_i| \theta_1) \times p(\theta_1) \\
+& \propto & \displaystyle \prod_{i=1}^{c-1} p(y_i| \theta_1) \times \mathbb{1}_{[0,1]}(\theta_1) \text{  Loi à priori de $\theta_1$ uniforme} \\
+& \propto & \displaystyle \prod_{i=1}^{c-1} (\theta_1)^{y_i} (1-\theta_1)^{(1-y_i)} \\
+& \propto & \theta_1^{\sum_{i=1}^{c-1} y_i} (1-\theta_1)^{c-1-\sum_{i=1}^{c-1} y_i}
+\end{eqnarray*}
+
+
+Si on note $Y_n = \displaystyle \sum_{i=1}^{n} y_i$, on observe que $\theta_1|c, y \sim  B(Y_{c-1}+1, c-Y_{c-1})$. 
+
