@@ -90,11 +90,13 @@ Or on a $\displaystyle \sum_{i=1}^{n} p_{c=i} = 1$ par la propriété des probab
 p_{c=1} = \dfrac{1}{1 + \displaystyle\sum_{k=2}^{n}  \left( \displaystyle \prod_{i=1}^{k-1} f_{\theta_1, \theta_2}(y_i)  \right)}
 \end{equation}
 
+Voici l'algorithme permettant de calculer $p_{c=n} \forall n \in \mathbb{N}$ :
+
 
 ```{r}
 
 f <- function(theta1, theta2, yi) {
-  result <- (theta1^yi * (1-theta1)^(1-yi)) / (theta2^y1 * (1-theta2)^(1-yi))
+  result <- (theta1^yi * (1-theta1)^(1-yi)) / (theta2^yi * (1-theta2)^(1-yi))
   return(result)
 }
 
@@ -102,17 +104,17 @@ pcsachanty <- function(theta1, theta2, y) {
   # On extrait n de y
   n <- length(y)
   # On s'occupe d'obtenir les valeurs de f(theta1, theta2, yi) (deux valeurs différentes lorsque yi = 0 ou yi =1) pour optimiser les   calculs suivants
-  vectorf <- c(0,1)
-  vectorf[0] <- f(theta1, theta2, 0)
-  vectorf[1] <- f(theta1, theta2, 1)
+  vectorf <- c(1:2)
+  vectorf[1] <- f(theta1, theta2, 0)
+  vectorf[2] <- f(theta1, theta2, 1)
   # On calcul p(c=1|y)
-  pcsachy <- c(1,n)
+  pcsachy <- c(1:n)
+  
   temp <- 0
-
   for (k in 2:n) {
-    mult <- 0
+    mult <- 1
     for (i in 1:(k-1)) {
-      mult <- mult*vectorf[y[i]]
+      mult <- mult*vectorf[y[i]+1]
     }
     temp <- temp + mult
   }
@@ -120,7 +122,7 @@ pcsachanty <- function(theta1, theta2, y) {
   pcsachy[1] <- 1/(1+temp)
   
   for (i in 2:n) {
-    pcsachy[i] <- pcsachy[i-1] * vectorf[y[i-1]]
+    pcsachy[i] <- pcsachy[i-1] * vectorf[y[i-1]+1]
   }
   # On retourne le vecteur contenant les probas p(c=n|y) pour tout n dans [1, n]
   return(pcsachy)
@@ -141,7 +143,7 @@ b) On estime $c$ via $p(c|y, \theta_1, \theta_2)$.
 c) On estime $\theta_1$ via $p(\theta_1|y,c)$ avec la valeur mise à jour de $c$. De même pour $\theta_2$.
 d) On retourne à l'étape b) jusqu'à convergence.
 
-L'étape b) ne pose pas de souci on a juste à utiliser la l'algorithme de la question 4.
+L'étape b) ne pose pas de souci on a juste à utiliser la l'algorithme de la question 4. Cependant, une question demeure : pour l'étape suivante sélectionne t-on $c$ tel que la probabilité est maximale ou bien on prend $c$ en procédant à un échantillonnage. Nous utiliserons les deux méthodes afin de constater laquelle est optimale.
 
 L'étape c) nécessite la connaissance de la densité $p(\theta_1|y,c)$ et $p(\theta_2|y,c)$. Nous n'avons pas ces densités.
 Cependant, on peut trouver leur expression. En effet :
@@ -150,9 +152,9 @@ $c$ ici nous indique jusqu'où on a de l'information sur $y$ concernant $\theta_
 
 \begin{eqnarray*}
 p(\theta_1|c, y) & = & p(\theta_1|c, y_1, y_2, \ldots, y_n) \\
-& = & p(\theta_1|c, y_1, y_2, \ldots, y_{c-1}) \text{  $c$ nous indique jusqu'où on a de l'information concernant $\theta_1$ sur $y$}\\
-& \propto & p(y_1| \theta_1) \times p(\theta_1|c, y_2, \ldots, y_{c-1}) \\
-& \propto & p(y_1| \theta_1) \times p(y_2| \theta_1) \times p(\theta_1|c, y_3, \ldots, y_{c-1}) \\
+& = & p(\theta_1|y_1, y_2, \ldots, y_{c-1}) \text{  $c$ nous indique jusqu'où on a de l'information concernant $\theta_1$ sur $y$}\\
+& \propto & p(y_1| \theta_1) \times p(\theta_1|y_2, \ldots, y_{c-1}) \\
+& \propto & p(y_1| \theta_1) \times p(y_2| \theta_1) \times p(\theta_1|y_3, \ldots, y_{c-1}) \\
 & \propto & \displaystyle \prod_{i=1}^{c-1} p(y_i| \theta_1) \times p(\theta_1) \\
 & \propto & \displaystyle \prod_{i=1}^{c-1} p(y_i| \theta_1) \times \mathbb{1}_{[0,1]}(\theta_1) \text{  Loi à priori de $\theta_1$ uniforme} \\
 & \propto & \displaystyle \prod_{i=1}^{c-1} (\theta_1)^{y_i} (1-\theta_1)^{(1-y_i)} \\
@@ -160,5 +162,135 @@ p(\theta_1|c, y) & = & p(\theta_1|c, y_1, y_2, \ldots, y_n) \\
 \end{eqnarray*}
 
 
-Si on note $Y_n = \displaystyle \sum_{i=1}^{n} y_i$, on observe que $\theta_1|c, y \sim  B(Y_{c-1}+1, c-Y_{c-1})$. 
+Si on note $Y_{1,n} = \displaystyle \sum_{i=1}^{n} y_i$, on observe que $\theta_1|c, y \sim  B(Y_{1,c-1}+1, c-Y_{1,c-1})$. 
+
+De même pour $\theta_2$ on a le déroulement suivant :
+
+\begin{eqnarray*}
+p(\theta_2|c, y) & = & p(\theta_2|c, y_1, y_2, \ldots, y_n) \\
+& = & p(\theta_2|y_c, y_{c+1}, \ldots, y_n) \text{  $c$ nous indique jusqu'où on a de l'information concernant $\theta_2$ sur $y$}\\
+& \propto & p(y_c| \theta_2) \times p(\theta_2|y_{c+1}, \ldots, y_n) \\
+& \propto & p(y_c| \theta_2) \times p(y_{c+1}| \theta_2) \times p(\theta_2|y_{c+2}, \ldots, y_n) \\
+& \propto & \displaystyle \prod_{i=c}^n p(y_i| \theta_2) \times p(\theta_2) \\
+& \propto & \displaystyle \prod_{i=c}^{n} p(y_i| \theta_2) \times \mathbb{1}_{[0,1]}(\theta_2) \text{  Loi à priori de $\theta_2$ uniforme} \\
+& \propto & \displaystyle \prod_{i=c}^{n} (\theta_2)^{y_i} (1-\theta_2)^{(1-y_i)} \\
+& \propto & \theta_2^{\sum_{i=c}^{n} y_i} (1-\theta_2)^{n-c+1-\sum_{i=c}^{n} y_i}
+\end{eqnarray*}
+
+On observe que $\theta_1|c, y \sim  B(Y_{c,n}+1, n-c+2-Y_{c,n})$.
+
+Voici l'algorithme réalisant l'échantillonnage de Gibbs :
+
+```{r}
+
+sumy <- function(bornemin, bornemax, y) {
+  result <- 0
+  for (i in bornemin:bornemax) {
+    result <- result + y[i]
+  }
+  return(result[1])
+}
+
+# ATTENTION à lire :
+# method est un booléen, si c'est TRUE on choisit c avec la plus grande proba sinon on prend c par échantillonnage
+echantGibbs <- function(theta1, theta2, y, nbriter, method) {
+  
+  # On va stocker theta1, theta2 et c pour chaque itération pour constater la convergence
+  result_vect_theta1 <- c(1:nbriter)
+  result_vect_theta2 <- c(1:nbriter)
+  result_vect_c <- c(1:nbriter)
+  
+  for (i in 1:nbriter) {
+    vectorc <- pcsachanty(theta1, theta2, y)
+    
+    if (method) {
+      c <- max(vectorc)
+    }
+    else {
+      c <- sample(1:n, size=1, replace=TRUE, prob=vectorc)
+    }
+    
+    y1c <- sumy(1, c-1, y)
+    ycn <- sumy(c, n, y)
+    
+    theta1 <- rbeta(1, y1c+1, c-y1c)
+    theta2 <- rbeta(1, ycn+1, n-c+2-ycn)
+    
+    result_vect_c[i] <- c
+    result_vect_theta1[i] <- theta1
+    result_vect_theta2[i] <- theta2
+  }
+  
+  return(c(result_vect_c, result_vect_theta1, result_vect_theta2))
+}
+```
+
+Exemple pour bien comprendre comment fonctionne la fonction sample utilisée lorsque "method=FALSE".
+
+```{r}
+x <- barplot(table(sample(1:3, size=1000, replace=TRUE, prob=c(0.05, 0.25, 0.70))))
+x
+```
+
+### QUESTION 6
+
+On va tester la convergence de notre algorithme d'échantillonnage de Gibbs en prenant une valeur quelconque de $c$ de $\theta_1$ et de $\theta_2$. 
+
+```{r}
+# MODIFIABLE : On initialise la taille de y on peut la modifer à notre guise
+n <- 100
+y <- c(1:n)
+
+# On prend un c compris entre 1 et n
+vectprob <- c(1:n)
+for (i in 1:n) {
+  vectprob[i] <- 1/n
+}
+c <- sample(1:n, size=1, replace=TRUE, prob=vectprob)
+if (c == 1) { c <- c + 1}
+
+# On choisit theta1 et theta2
+theta1 <- runif(1, 0, 1)
+theta2 <- runif(1, 0, 1)
+
+# On construit y
+for (i in 1:(c-1)) {
+  if (runif(1, 0, 1) <= theta1) {
+    y[i] <- 1
+  }
+  else {
+    y[i] <- 0
+  }
+}
+
+for (i in c:n) {
+   if (runif(1, 0, 1) <= theta2) {
+    y[i] <- 1
+  }
+  else {
+    y[i] <- 0
+  }
+}
+
+# On affiche c, theta1 et theta2
+c
+theta1
+theta2
+
+# MODIFIABLE
+nbriter <- 10000
+burn <- 1000
+
+final_result <- echantGibbs(0.3, 0.3, y, nbriter, FALSE)
+print("c expérimental")
+trunc(mean(final_result[(1+burn):nbriter]))
+print("theta1 expérimental")
+mean(final_result[(nbriter+1+burn):(2*nbriter)])
+print("theta2 expérimental")
+mean(final_result[(2*nbriter+1+burn):(3*nbriter)])
+
+```
+
+### QUESTION 7
+
 

@@ -185,6 +185,7 @@ p_{c=n+1} = p_{c=n} \times f_{\theta_1, \theta_2}(y_n)
 <span class="math display">\[\begin{equation}
 p_{c=1} = \dfrac{1}{1 + \displaystyle\sum_{k=2}^{n}  \left( \displaystyle \prod_{i=1}^{k-1} f_{\theta_1, \theta_2}(y_i)  \right)}
 \end{equation}\]</span>
+<p>Voici l’algorithme permettant de calculer <span class="math inline">\(p_{c=n} \forall n \in \mathbb{N}\)</span> :</p>
 <pre class="r"><code>f &lt;- function(theta1, theta2, yi) {
   result &lt;- (theta1^yi * (1-theta1)^(1-yi)) / (theta2^y1 * (1-theta2)^(1-yi))
   return(result)
@@ -234,15 +235,28 @@ pcsachanty &lt;- function(theta1, theta2, y) {
 <p><span class="math inline">\(c\)</span> ici nous indique jusqu’où on a de l’information sur <span class="math inline">\(y\)</span> concernant <span class="math inline">\(\theta_1\)</span>.</p>
 <span class="math display">\[\begin{eqnarray*}
 p(\theta_1|c, y) &amp; = &amp; p(\theta_1|c, y_1, y_2, \ldots, y_n) \\
-&amp; = &amp; p(\theta_1|c, y_1, y_2, \ldots, y_{c-1}) \text{  $c$ nous indique jusqu'où on a de l'information concernant $\theta_1$ sur $y$}\\
-&amp; \propto &amp; p(y_1| \theta_1) \times p(\theta_1|c, y_2, \ldots, y_{c-1}) \\
-&amp; \propto &amp; p(y_1| \theta_1) \times p(y_2| \theta_1) \times p(\theta_1|c, y_3, \ldots, y_{c-1}) \\
+&amp; = &amp; p(\theta_1|y_1, y_2, \ldots, y_{c-1}) \text{  $c$ nous indique jusqu'où on a de l'information concernant $\theta_1$ sur $y$}\\
+&amp; \propto &amp; p(y_1| \theta_1) \times p(\theta_1|y_2, \ldots, y_{c-1}) \\
+&amp; \propto &amp; p(y_1| \theta_1) \times p(y_2| \theta_1) \times p(\theta_1|y_3, \ldots, y_{c-1}) \\
 &amp; \propto &amp; \displaystyle \prod_{i=1}^{c-1} p(y_i| \theta_1) \times p(\theta_1) \\
 &amp; \propto &amp; \displaystyle \prod_{i=1}^{c-1} p(y_i| \theta_1) \times \mathbb{1}_{[0,1]}(\theta_1) \text{  Loi à priori de $\theta_1$ uniforme} \\
 &amp; \propto &amp; \displaystyle \prod_{i=1}^{c-1} (\theta_1)^{y_i} (1-\theta_1)^{(1-y_i)} \\
-&amp; \propto &amp; \theta_1^{\sum_{i=1}^{c-1} y_i} (1-\theta_1)^{c-1-\sum_{i=1}^{c-1} y_i}
+&amp; \propto &amp; \theta_1^{\sum_{i=1}^{c-1} y_i} (1-\theta_1)^{c-\sum_{i=1}^{c-1} y_i}
 \end{eqnarray*}\]</span>
-<p>Si on note <span class="math inline">\(Y_n = \displaystyle \sum_{i=1}^{n} y_i\)</span>, on observe que <span class="math inline">\(\theta_1|c, y \sim B(Y_{c-1}+1, c-Y_{c-1})\)</span>.</p>
+<p>Si on note <span class="math inline">\(Y_{1,n} = \displaystyle \sum_{i=1}^{n} y_i\)</span>, on observe que <span class="math inline">\(\theta_1|c, y \sim B(Y_{1,c-1}+1, c+1-Y_{1,c-1})\)</span>.</p>
+<p>De même pour <span class="math inline">\(\theta_2\)</span> on a le déroulement suivant :</p>
+<span class="math display">\[\begin{eqnarray*}
+p(\theta_2|c, y) &amp; = &amp; p(\theta_2|c, y_1, y_2, \ldots, y_n) \\
+&amp; = &amp; p(\theta_2|y_c, y_{c+1}, \ldots, y_n) \text{  $c$ nous indique jusqu'où on a de l'information concernant $\theta_2$ sur $y$}\\
+&amp; \propto &amp; p(y_c| \theta_2) \times p(\theta_2|y_{c+1}, \ldots, y_n) \\
+&amp; \propto &amp; p(y_c| \theta_2) \times p(y_{c+1}| \theta_2) \times p(\theta_2|y_{c+2}, \ldots, y_n) \\
+&amp; \propto &amp; \displaystyle \prod_{i=c}^n p(y_i| \theta_2) \times p(\theta_2) \\
+&amp; \propto &amp; \displaystyle \prod_{i=c}^{n} p(y_i| \theta_2) \times \mathbb{1}_{[0,1]}(\theta_2) \text{  Loi à priori de $\theta_2$ uniforme} \\
+&amp; \propto &amp; \displaystyle \prod_{i=c}^{n} (\theta_2)^{y_i} (1-\theta_2)^{(1-y_i)} \\
+&amp; \propto &amp; \theta_2^{\sum_{i=c}^{n} y_i} (1-\theta_2)^{n-c+1-\sum_{i=c}^{n} y_i}
+\end{eqnarray*}\]</span>
+<p>On observe que <span class="math inline">\(\theta_1|c, y \sim B(Y_{c,n}+1, n-c-Y_{c,n})\)</span>.</p>
+<p>Voici l’algorithme réalisant l’échantillonnage de Gibbs :</p>
 </div>
 
 
